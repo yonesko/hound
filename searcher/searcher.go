@@ -333,7 +333,7 @@ func MakeAll(cfg *config.Config) (map[string]*Searcher, map[string]error, error)
 
 	if cfg.GitLabInstance != nil {
 		for _, project := range gitlabProjects {
-			message := config.SecretMessage(`{"detect-ref":true}`)
+			message := config.SecretMessage(`{"detect-ref":true}`) //TODO read from config
 			repo := &config.Repo{
 				Url:              project.SSHURLToRepo,
 				MsBetweenPolls:   30000,
