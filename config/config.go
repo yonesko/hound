@@ -57,6 +57,11 @@ func (r *Repo) PushUpdatesEnabled() bool {
 	return optionToBool(r.EnablePushUpdates, defaultPushEnabled)
 }
 
+type GitLabInstance struct {
+	Url      string `json:"url"`
+	TokenENV string `json:"token_env"`
+}
+
 type Config struct {
 	DbPath                string                    `json:"dbpath"`
 	Title                 string                    `json:"title"`
@@ -65,6 +70,7 @@ type Config struct {
 	HealthCheckURI        string                    `json:"health-check-uri"`
 	VCSConfigMessages     map[string]*SecretMessage `json:"vcs-config"`
 	ResultLimit           int                       `json:"result-limit"`
+	GitLabInstance        *GitLabInstance           `json:"git_lab_instance"`
 }
 
 // SecretMessage is just like json.RawMessage but it will not

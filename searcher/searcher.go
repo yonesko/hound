@@ -4,6 +4,7 @@ import (
 	"crypto/sha1"
 	"encoding/hex"
 	"fmt"
+	gitlab "gitlab.com/gitlab-org/api/client-go"
 	"io/ioutil"
 	"log"
 	"math/rand"
@@ -264,7 +265,7 @@ func reportOnMemory() {
 // Utility function for producing a hex encoded sha1 hash for a string.
 func hashFor(name string) string {
 	h := sha1.New()
-	h.Write([]byte(name))  //nolint
+	h.Write([]byte(name)) //nolint
 	return hex.EncodeToString(h.Sum(nil))
 }
 
@@ -275,6 +276,31 @@ func vcsDirFor(repo *config.Repo) string {
 
 func init() {
 	rand.Seed(time.Now().UnixNano())
+}
+
+func findGitlabProjects(gitLabInstance *config.GitLabInstance) []*gitlab.Project {
+	if gitLabInstance == nil {
+		return nil
+	}
+	log.Printf("Watching GitLab projects on %s\n", gitLabInstance.Url)
+	gitlabClient, err := gitlab.NewClient(os.Getenv(gitLabInstance.TokenENV), gitlab.WithBaseURL(gitLabInstance.Url))
+	if err != nil {
+		log.Fatalf("Failed to create client: %v", err)
+	}
+
+	var globalProjects []*gitlab.Project
+	for i := 1; ; i++ {
+		projects, _, err := gitlabClient.Projects.ListProjects(
+			&gitlab.ListProjectsOptions{ListOptions: gitlab.ListOptions{Page: i, PerPage: 100}})
+		if err != nil {
+			fmt.Printf("err='%+v'\n", err)
+			return nil
+		}
+		globalProjects = append(globalProjects, projects...)
+		if len(projects) == 0 {
+			return globalProjects[:13]
+		}
+	}
 }
 
 // Make a searcher for each repo in the Config. This function kind of has a notion
@@ -293,7 +319,9 @@ func MakeAll(cfg *config.Config) (map[string]*Searcher, map[string]error, error)
 
 	lim := makeLimiter(cfg.MaxConcurrentIndexers)
 
-	n := len(cfg.Repos)
+	gitlabProjects := findGitlabProjects(cfg.GitLabInstance)
+
+	n := len(cfg.Repos) + len(gitlabProjects)
 	// Channel to receive the results from newSearcherConcurrent function.
 	resultCh := make(chan searcherResult, n)
 
@@ -301,6 +329,23 @@ func MakeAll(cfg *config.Config) (map[string]*Searcher, map[string]error, error)
 	// respecting cfg.MaxConcurrentIndexers.
 	for name, repo := range cfg.Repos {
 		go newSearcherConcurrent(cfg.DbPath, name, repo, refs, lim, resultCh)
+	}
+
+	if cfg.GitLabInstance != nil {
+		for _, project := range gitlabProjects {
+			message := config.SecretMessage(`{"detect-ref":true}`)
+			repo := &config.Repo{
+				Url:              project.SSHURLToRepo,
+				MsBetweenPolls:   30000,
+				Vcs:              "git",
+				VcsConfigMessage: &message,
+				//UrlPattern: &config.UrlPattern{
+				//	BaseUrl: "{url}/blob/{rev}/{path}{anchor}",
+				//	Anchor:  "#L{line}",
+				//},
+			}
+			go newSearcherConcurrent(cfg.DbPath, project.Name, repo, refs, lim, resultCh)
+		}
 	}
 
 	// Collect the results on resultCh channel for all repos.
@@ -407,7 +452,6 @@ func newSearcher(
 		return nil, err
 	}
 
-
 	rev, err := wd.PullOrClone(vcsDir, repo.Url)
 	if err != nil {
 		return nil, err
@@ -509,7 +553,6 @@ func newSearcherConcurrent(
 	refs *foundRefs,
 	lim limiter,
 	resultCh chan searcherResult) {
-
 	// acquire a token from the rate limiter
 	lim.Acquire()
 	defer lim.Release()
