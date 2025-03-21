@@ -339,10 +339,6 @@ func MakeAll(cfg *config.Config) (map[string]*Searcher, map[string]error, error)
 				MsBetweenPolls:   30000,
 				Vcs:              "git",
 				VcsConfigMessage: &message,
-				//UrlPattern: &config.UrlPattern{
-				//	BaseUrl: "{url}/blob/{rev}/{path}{anchor}",
-				//	Anchor:  "#L{line}",
-				//},
 			}
 			go newSearcherConcurrent(cfg.DbPath, project.Name, repo, refs, lim, resultCh)
 		}

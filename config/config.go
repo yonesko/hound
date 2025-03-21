@@ -70,7 +70,7 @@ type Config struct {
 	HealthCheckURI        string                    `json:"health-check-uri"`
 	VCSConfigMessages     map[string]*SecretMessage `json:"vcs-config"`
 	ResultLimit           int                       `json:"result-limit"`
-	GitLabInstance        *GitLabInstance           `json:"git_lab_instance"`
+	GitLabInstance        *GitLabInstance           `json:"gitlab_instance"`
 }
 
 // SecretMessage is just like json.RawMessage but it will not
