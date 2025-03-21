@@ -298,7 +298,7 @@ func findGitlabProjects(gitLabInstance *config.GitLabInstance) []*gitlab.Project
 		}
 		globalProjects = append(globalProjects, projects...)
 		if len(projects) == 0 {
-			return globalProjects[:13]
+			return globalProjects
 		}
 	}
 }
