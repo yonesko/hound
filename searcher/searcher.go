@@ -320,6 +320,7 @@ func MakeAll(cfg *config.Config) (map[string]*Searcher, map[string]error, error)
 	lim := makeLimiter(cfg.MaxConcurrentIndexers)
 
 	gitlabProjects := findGitlabProjects(cfg.GitLabInstance)
+	fmt.Println("found gitlab projects:", len(gitlabProjects))
 
 	n := len(cfg.Repos) + len(gitlabProjects)
 	// Channel to receive the results from newSearcherConcurrent function.
