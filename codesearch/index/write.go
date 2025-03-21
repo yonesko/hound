@@ -255,7 +255,7 @@ func (ix *IndexWriter) Flush() {
 	os.Remove(ix.nameIndex.name)
 	os.Remove(ix.postIndex.name)
 
-	log.Printf("%d data bytes, %d index bytes", ix.totalBytes, ix.main.offset())
+	log.Printf("Flushed %d data bytes, %d index bytes", ix.totalBytes, ix.main.offset())
 
 	ix.main.flush()
 }
