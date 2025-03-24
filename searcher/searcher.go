@@ -334,13 +334,16 @@ func MakeAll(cfg *config.Config) (map[string]*Searcher, map[string]error, error)
 
 	if cfg.GitLabInstance != nil {
 		for _, project := range gitlabProjects {
-			message := config.SecretMessage(`{"detect-ref":true}`)
 			repo := &config.Repo{
-				Url:              project.SSHURLToRepo,
-				MsBetweenPolls:   30000,
-				Vcs:              "git",
-				VcsConfigMessage: &message,
+				Url:            project.SSHURLToRepo,
+				MsBetweenPolls: 30000,
+				Vcs:            "git",
 			}
+			err := config.MergeVCSConfigs(cfg.VCSConfigMessages, []*config.Repo{repo})
+			if err != nil {
+				return nil, nil, err
+			}
+
 			go newSearcherConcurrent(cfg.DbPath, project.Name, repo, refs, lim, resultCh)
 		}
 	}

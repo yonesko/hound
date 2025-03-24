@@ -3,6 +3,7 @@ package config
 import (
 	"encoding/json"
 	"errors"
+	"github.com/samber/lo"
 	"os"
 	"path/filepath"
 )
@@ -142,10 +143,10 @@ func initConfig(c *Config) error {
 		c.ResultLimit = defaultResultLimit
 	}
 
-	return mergeVCSConfigs(c.VCSConfigMessages, c.Repos)
+	return MergeVCSConfigs(c.VCSConfigMessages, lo.Values(c.Repos))
 }
 
-func mergeVCSConfigs(vcsConfigMessages map[string]*SecretMessage, repos map[string]*Repo) error {
+func MergeVCSConfigs(vcsConfigMessages map[string]*SecretMessage, repos []*Repo) error {
 	globalConfigLen := len(vcsConfigMessages)
 	if globalConfigLen == 0 {
 		return nil
