@@ -152,7 +152,7 @@ func main() {
 	// It's not safe to be killed during makeSearchers, so register the
 	// shutdown signal here and defer processing it until we are ready.
 	shutdownCh := registerShutdownSignal()
-	idx, ok, err := makeSearchers(&cfg)
+	searchers, ok, err := makeSearchers(&cfg)
 	if err != nil {
 		log.Panic(err)
 	}
@@ -162,7 +162,7 @@ func main() {
 		info_log.Println("All indexes built!")
 	}
 
-	handleShutdown(shutdownCh, idx)
+	handleShutdown(shutdownCh, searchers)
 
 	host := *flagAddr
 	if strings.HasPrefix(host, ":") { //nolint
@@ -184,5 +184,5 @@ func main() {
 	info_log.Printf("running server at http://%s\n", host)
 
 	// Fully enable the web server now that we have indexes
-	panic(ws.ServeWithIndex(idx))
+	panic(ws.ServeWithIndex(searchers))
 }

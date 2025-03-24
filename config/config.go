@@ -142,17 +142,17 @@ func initConfig(c *Config) error {
 		c.ResultLimit = defaultResultLimit
 	}
 
-	return mergeVCSConfigs(c)
+	return mergeVCSConfigs(c.VCSConfigMessages, c.Repos)
 }
 
-func mergeVCSConfigs(cfg *Config) error {
-	globalConfigLen := len(cfg.VCSConfigMessages)
+func mergeVCSConfigs(vcsConfigMessages map[string]*SecretMessage, repos map[string]*Repo) error {
+	globalConfigLen := len(vcsConfigMessages)
 	if globalConfigLen == 0 {
 		return nil
 	}
 
 	globalConfigVals := make(map[string]map[string]interface{}, globalConfigLen)
-	for vcs, configBytes := range cfg.VCSConfigMessages {
+	for vcs, configBytes := range vcsConfigMessages {
 		var configVals map[string]interface{}
 		if err := json.Unmarshal(*configBytes, &configVals); err != nil {
 			return err
@@ -161,7 +161,7 @@ func mergeVCSConfigs(cfg *Config) error {
 		globalConfigVals[vcs] = configVals
 	}
 
-	for _, repo := range cfg.Repos {
+	for _, repo := range repos {
 		var globalVals map[string]interface{}
 		globalVals, valsExist := globalConfigVals[repo.Vcs]
 		if !valsExist {
