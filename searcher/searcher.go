@@ -231,13 +231,7 @@ func findExistingRefs(dbpath string) (*foundRefs, error) {
 // Open an index at the given path. If the idxDir is already present, it will
 // simply open and use that index. If, however, the idxDir does not exist a new
 // one will be built.
-func buildAndOpenIndex(
-	opt *index.IndexOptions,
-	dbpath,
-	vcsDir,
-	idxDir,
-	url,
-	rev string) (*index.Index, error) {
+func buildAndOpenIndex(opt *index.IndexOptions, vcsDir, idxDir, url, rev string) (*index.Index, error) {
 	if _, err := os.Stat(idxDir); err != nil {
 		r, err := index.Build(opt, idxDir, vcsDir, url, rev)
 		if err != nil {
@@ -412,13 +406,7 @@ func updateAndReindex(
 	}
 
 	log.Printf("Rebuilding %s for %s", name, newRev)
-	idx, err := buildAndOpenIndex(
-		opt,
-		dbpath,
-		vcsDir,
-		nextIndexDir(dbpath),
-		repo.Url,
-		newRev)
+	idx, err := buildAndOpenIndex(opt, vcsDir, nextIndexDir(dbpath), repo.Url, newRev)
 	if err != nil {
 		log.Printf("failed index build (%s): %s", name, err)
 		return rev, false
@@ -479,13 +467,7 @@ func newSearcher(
 		refs.claim(ref)
 	}
 
-	idx, err := buildAndOpenIndex(
-		opt,
-		dbpath,
-		vcsDir,
-		idxDir,
-		repo.Url,
-		rev)
+	idx, err := buildAndOpenIndex(opt, vcsDir, idxDir, repo.Url, rev)
 	if err != nil {
 		return nil, err
 	}
